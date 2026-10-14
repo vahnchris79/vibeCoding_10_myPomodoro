@@ -1,0 +1,811 @@
+/* ==========================================================================
+   FocusFlow | Pomodoro Timer Design System & Styling
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Design Tokens & CSS Variables
+   -------------------------------------------------------------------------- */
+:root {
+  /* Typography */
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Universal Neutrals */
+  --color-white: #ffffff;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  
+  /* Glassmorphism Surface Tokens */
+  --glass-bg: rgba(22, 27, 34, 0.65);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-focus: rgba(255, 255, 255, 0.25);
+  --glass-blur: blur(24px);
+  --card-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--glass-border);
+
+  /* Work Mode Theme (Deep Terracotta / Coral / Amber) */
+  --theme-bg-gradient: radial-gradient(circle at 50% 15%, #2a1410 0%, #150b08 55%, #0a0504 100%);
+  --accent-color: #ff6b4a;
+  --accent-gradient: linear-gradient(135deg, #ff7b54 0%, #ff4d4d 50%, #ff9068 100%);
+  --accent-glow: rgba(255, 107, 74, 0.45);
+  --accent-soft: rgba(255, 107, 74, 0.15);
+  --ring-stroke: url(#workGradient);
+  --orb-1-color: rgba(255, 107, 74, 0.25);
+  --orb-2-color: rgba(234, 88, 12, 0.2);
+  --badge-bg: rgba(255, 107, 74, 0.15);
+  --badge-border: rgba(255, 107, 74, 0.35);
+  --badge-text: #ff9e80;
+}
+
+/* Break Mode Theme (Deep Emerald / Forest / Mint) */
+body.break-mode {
+  --theme-bg-gradient: radial-gradient(circle at 50% 15%, #08281d 0%, #041610 55%, #020b08 100%);
+  --accent-color: #2dd4bf;
+  --accent-gradient: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 50%, #34d399 100%);
+  --accent-glow: rgba(45, 212, 191, 0.45);
+  --accent-soft: rgba(45, 212, 191, 0.15);
+  --ring-stroke: url(#breakGradient);
+  --orb-1-color: rgba(45, 212, 191, 0.25);
+  --orb-2-color: rgba(16, 185, 129, 0.2);
+  --badge-bg: rgba(45, 212, 191, 0.15);
+  --badge-border: rgba(45, 212, 191, 0.35);
+  --badge-text: #5eead4;
+}
+
+/* --------------------------------------------------------------------------
+   2. Reset & Global Base
+   -------------------------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  min-height: 100%;
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  background: var(--theme-bg-gradient);
+  background-attachment: fixed;
+  overflow-x: hidden;
+  transition: background 1.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ambient Floating Background Orbs */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.8;
+  transition: background 1.4s ease, transform 10s ease-in-out infinite alternate;
+}
+
+.orb-1 {
+  width: 450px;
+  height: 450px;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--orb-1-color);
+  animation: floatOrb1 16s infinite alternate ease-in-out;
+}
+
+.orb-2 {
+  width: 380px;
+  height: 380px;
+  bottom: 5%;
+  right: 15%;
+  background: var(--orb-2-color);
+  animation: floatOrb2 20s infinite alternate-reverse ease-in-out;
+}
+
+.orb-3 {
+  width: 300px;
+  height: 300px;
+  bottom: 20%;
+  left: 10%;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+@keyframes floatOrb1 {
+  0% { transform: translate(-50%, 0) scale(1); }
+  100% { transform: translate(-45%, 40px) scale(1.12); }
+}
+
+@keyframes floatOrb2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-30px, -40px) scale(1.08); }
+}
+
+/* --------------------------------------------------------------------------
+   3. Layout Structure
+   -------------------------------------------------------------------------- */
+.app-wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 580px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 28px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+/* --------------------------------------------------------------------------
+   4. Header Component
+   -------------------------------------------------------------------------- */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 9999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.brand-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 8px rgba(255, 77, 77, 0.4));
+  animation: pulseTomato 3s ease-in-out infinite;
+}
+
+@keyframes pulseTomato {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.brand-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--color-white);
+}
+
+.brand-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  background: var(--accent-gradient);
+  color: #fff;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+/* Session Tracker Badge */
+.session-tracker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: 9999px;
+  font-size: 13px;
+  transition: all 0.25s ease;
+}
+
+.session-tracker:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--glass-border-focus);
+}
+
+.session-label {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.session-count-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.session-count {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--accent-color);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.session-unit {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.btn-icon-subtle {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.btn-icon-subtle:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotate(-45deg);
+}
+
+/* --------------------------------------------------------------------------
+   5. Main Glassmorphism Card
+   -------------------------------------------------------------------------- */
+.main-card {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 36px;
+  padding: 36px 28px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  transition: border-color 0.4s ease;
+}
+
+/* Mode Badge */
+.mode-badge-container {
+  display: flex;
+  justify-content: center;
+}
+
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: var(--badge-bg);
+  border: 1px solid var(--badge-border);
+  border-radius: 9999px;
+  transition: all 0.5s ease;
+}
+
+.mode-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  box-shadow: 0 0 10px var(--accent-color);
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.mode-text {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--badge-text);
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   6. Circular Timer & SVG Progress Ring
+   -------------------------------------------------------------------------- */
+.timer-display-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.progress-ring-wrapper {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 12;
+}
+
+.ring-progress {
+  fill: none;
+  stroke: var(--ring-stroke);
+  stroke-width: 12;
+  stroke-linecap: round;
+  filter: url(#glow);
+  /* Circumference = 2 * PI * 135 ≈ 848.23 */
+  stroke-dasharray: 848.23;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.35s ease, stroke 0.5s ease;
+}
+
+.timer-center-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  user-select: none;
+  text-align: center;
+}
+
+.timer-sub-status {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  transition: color 0.3s ease;
+}
+
+.time-readout {
+  font-family: var(--font-mono);
+  font-size: 68px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -2px;
+  color: var(--color-text-primary);
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+.timer-target-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-top: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   7. Control Buttons (Rounded Pill & Hover Animations)
+   -------------------------------------------------------------------------- */
+.controls-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.btn {
+  border: none;
+  cursor: pointer;
+  border-radius: 9999px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  user-select: none;
+  outline: none;
+}
+
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--accent-color), 0 0 15px var(--accent-glow);
+}
+
+/* Primary Button (Start) */
+.btn-primary {
+  background: var(--accent-gradient);
+  color: #ffffff;
+  box-shadow: 0 8px 24px var(--accent-glow), 0 2px 4px rgba(0, 0, 0, 0.2);
+  min-width: 130px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 14px 32px var(--accent-glow), 0 4px 10px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.08);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+/* Secondary Button (Pause) */
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+  border: 1px solid var(--glass-border);
+  min-width: 130px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: var(--glass-border-focus);
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(1px) scale(0.97);
+}
+
+/* Tertiary Button (Reset) */
+.btn-tertiary {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 22px;
+}
+
+.btn-tertiary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--glass-border);
+  color: var(--color-text-primary);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.btn-tertiary:active:not(:disabled) {
+  transform: translateY(1px) scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   8. Ambient Sound Card & Audio Dock
+   -------------------------------------------------------------------------- */
+.ambient-sound-card {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 24px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.3s ease;
+}
+
+.ambient-sound-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.sound-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sound-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sound-icon {
+  font-size: 16px;
+}
+
+.sound-heading {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.sound-status-tag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--accent-color);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Sound Selector Chips */
+.sound-chips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  outline: none;
+}
+
+.chip-icon {
+  font-size: 18px;
+  transition: transform 0.25s ease;
+}
+
+.chip-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--glass-border-focus);
+  color: var(--color-text-primary);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.chip.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-color);
+  color: #ffffff;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.chip.active .chip-icon {
+  transform: scale(1.15);
+}
+
+/* Volume Control Row */
+.volume-control-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+.btn-mute {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-mute:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.1);
+}
+
+.vol-icon.hide {
+  display: none;
+}
+
+.slider-wrapper {
+  position: relative;
+  flex: 1;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 10px var(--accent-glow);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
+  border: 2px solid var(--accent-color);
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  border: 2px solid var(--accent-color);
+  transition: transform 0.2s ease;
+}
+
+.volume-slider::-moz-range-thumb:hover {
+  transform: scale(1.25);
+}
+
+.slider-fill {
+  position: absolute;
+  left: 0;
+  top: 11px;
+  height: 6px;
+  background: var(--accent-gradient);
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 1;
+  transition: width 0.05s ease;
+}
+
+.volume-percent {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  min-width: 42px;
+  text-align: right;
+}
+
+/* --------------------------------------------------------------------------
+   9. Footer & Shortcuts Guide
+   -------------------------------------------------------------------------- */
+.app-footer {
+  text-align: center;
+}
+
+.shortcuts-guide {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 9999px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.guide-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.divider {
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* --------------------------------------------------------------------------
+   10. Celebration Animation
+   -------------------------------------------------------------------------- */
+@keyframes celebrateBounce {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.25) rotate(-5deg); }
+  60% { transform: scale(1.15) rotate(5deg); }
+}
+
+.celebrate {
+  animation: celebrateBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* --------------------------------------------------------------------------
+   11. Responsive Adjustments
+   -------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .app-wrapper {
+    padding: 16px 12px 28px;
+  }
+
+  .main-card {
+    padding: 24px 16px;
+    border-radius: 28px;
+    gap: 24px;
+  }
+
+  .progress-ring-wrapper {
+    width: 270px;
+    height: 270px;
+  }
+
+  .time-readout {
+    font-size: 56px;
+  }
+
+  .controls-container {
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 12px 18px;
+    font-size: 14px;
+    min-width: unset;
+  }
+
+  .sound-chips {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .shortcuts-guide {
+    flex-wrap: wrap;
+    justify-content: center;
+    border-radius: 16px;
+  }
+}

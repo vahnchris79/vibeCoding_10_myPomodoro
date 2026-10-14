@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="25분 집중과 5분 휴식, 앰비언트 백색소음(파도, 비, 새소리)과 함께하는 고품격 포모도로 타이머 웹 애플리케이션입니다.">
+  <title>FocusFlow | 포모도로 타이머</title>
+  
+  <!-- Favicon (SVG Tomato) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍅</text></svg>">
+  
+  <!-- Google Fonts: Outfit, Plus Jakarta Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="work-mode">
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Header: Logo & Session Counter -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">🍅</span>
+        <h1 class="brand-title">FocusFlow</h1>
+        <span class="brand-badge">PRO</span>
+      </div>
+
+      <div class="header-actions">
+        <!-- Session Counter Badge -->
+        <div class="session-tracker" id="session-tracker" title="오늘 완료한 집중 세션">
+          <span class="session-label">완료 세션</span>
+          <div class="session-count-wrapper">
+            <span class="session-icon" aria-hidden="true">🍅</span>
+            <span class="session-count" id="session-count">0</span>
+            <span class="session-unit">회</span>
+          </div>
+          <button type="button" class="btn-icon-subtle" id="btn-reset-sessions" title="세션 카운트 초기화" aria-label="세션 카운트 초기화">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container: Glass Card -->
+    <main class="main-card">
+      <!-- Mode Badge Indicator -->
+      <div class="mode-badge-container">
+        <div class="mode-badge" id="mode-badge">
+          <span class="mode-pulse-dot" aria-hidden="true"></span>
+          <span class="mode-text" id="mode-text">집중 시간</span>
+        </div>
+      </div>
+
+      <!-- Circular Timer Section -->
+      <div class="timer-display-container">
+        <div class="progress-ring-wrapper">
+          <svg class="progress-ring" viewBox="0 0 320 320" aria-hidden="true">
+            <defs>
+              <!-- Work Mode Gradient -->
+              <linearGradient id="workGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ff7b54" />
+                <stop offset="50%" stop-color="#ff4d4d" />
+                <stop offset="100%" stop-color="#ff9068" />
+              </linearGradient>
+              <!-- Break Mode Gradient -->
+              <linearGradient id="breakGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#2dd4bf" />
+                <stop offset="50%" stop-color="#14b8a6" />
+                <stop offset="100%" stop-color="#34d399" />
+              </linearGradient>
+              <!-- Filter for Neon Glow -->
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <!-- Background Track -->
+            <circle 
+              class="ring-track" 
+              cx="160" 
+              cy="160" 
+              r="135" 
+            />
+
+            <!-- Dynamic Animated Progress Bar -->
+            <circle 
+              class="ring-progress" 
+              id="progress-circle"
+              cx="160" 
+              cy="160" 
+              r="135" 
+            />
+          </svg>
+
+          <!-- Inside Center Display -->
+          <div class="timer-center-content">
+            <span class="timer-sub-status" id="timer-sub-status">준비 완료</span>
+            <div class="time-readout" id="timer-display" aria-live="polite">25:00</div>
+            <span class="timer-target-label" id="timer-target-label">목표: 25분 집중</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Control Buttons -->
+      <div class="controls-container">
+        <!-- Start Button -->
+        <button type="button" class="btn btn-primary" id="btn-start" aria-label="타이머 시작">
+          <svg class="btn-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span class="btn-text">시작</span>
+        </button>
+
+        <!-- Pause Button -->
+        <button type="button" class="btn btn-secondary" id="btn-pause" aria-label="타이머 일시정지" disabled>
+          <svg class="btn-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16" rx="1"/>
+            <rect x="14" y="4" width="4" height="16" rx="1"/>
+          </svg>
+          <span class="btn-text">일시정지</span>
+        </button>
+
+        <!-- Reset Button -->
+        <button type="button" class="btn btn-tertiary" id="btn-reset" aria-label="타이머 초기화">
+          <svg class="btn-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          <span class="btn-text">초기화</span>
+        </button>
+      </div>
+
+      <!-- Ambient Sound & Audio Dock -->
+      <section class="ambient-sound-card" aria-label="백색소음 플레이어">
+        <div class="sound-card-header">
+          <div class="sound-title-group">
+            <span class="sound-icon" aria-hidden="true">🎧</span>
+            <span class="sound-heading">백색소음 (Ambient Sound)</span>
+          </div>
+          <span class="sound-status-tag" id="active-sound-name">꺼짐</span>
+        </div>
+
+        <!-- Sound Selector Chips -->
+        <div class="sound-chips" role="radiogroup" aria-label="백색소음 종류 선택">
+          <button type="button" class="chip active" data-sound="none" id="chip-none" role="radio" aria-checked="true">
+            <span class="chip-icon">⏹️</span>
+            <span class="chip-label">끄기</span>
+          </button>
+          <button type="button" class="chip" data-sound="waves" id="chip-waves" role="radio" aria-checked="false">
+            <span class="chip-icon">🌊</span>
+            <span class="chip-label">파도</span>
+          </button>
+          <button type="button" class="chip" data-sound="rain" id="chip-rain" role="radio" aria-checked="false">
+            <span class="chip-icon">🌧️</span>
+            <span class="chip-label">빗소리</span>
+          </button>
+          <button type="button" class="chip" data-sound="birds" id="chip-birds" role="radio" aria-checked="false">
+            <span class="chip-icon">🐦</span>
+            <span class="chip-label">새소리</span>
+          </button>
+        </div>
+
+        <!-- Volume & Mute Controls -->
+        <div class="volume-control-row">
+          <!-- Mute/Unmute Toggle -->
+          <button type="button" class="btn-mute" id="btn-mute" aria-label="음소거 토글" title="음소거 토글">
+            <svg id="icon-volume-high" class="vol-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            </svg>
+            <svg id="icon-volume-low" class="vol-icon hide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+            <svg id="icon-volume-muted" class="vol-icon hide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <line x1="23" y1="9" x2="17" y2="15"/>
+              <line x1="17" y1="9" x2="23" y2="15"/>
+            </svg>
+          </button>
+
+          <!-- Slider -->
+          <div class="slider-wrapper">
+            <input 
+              type="range" 
+              id="volume-slider" 
+              class="volume-slider" 
+              min="0" 
+              max="100" 
+              value="60" 
+              aria-label="백색소음 음량 조절"
+            >
+            <div class="slider-fill" id="slider-fill" style="width: 60%;"></div>
+          </div>
+
+          <!-- Volume Value Label -->
+          <span class="volume-percent" id="volume-text">60%</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer: Keyboard Shortcuts -->
+    <footer class="app-footer">
+      <div class="shortcuts-guide">
+        <span class="guide-item"><kbd>Space</kbd> 시작 / 일시정지</span>
+        <span class="divider">•</span>
+        <span class="guide-item"><kbd>R</kbd> 초기화</span>
+        <span class="divider">•</span>
+        <span class="guide-item"><kbd>M</kbd> 음소거</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="audio.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
